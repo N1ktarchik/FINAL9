@@ -2,6 +2,9 @@ package main
 
 import (
 	"fmt"
+	"math/rand"
+	"sync"
+	"time"
 )
 
 const (
@@ -11,30 +14,119 @@ const (
 
 // generateRandomElements generates random elements.
 func generateRandomElements(size int) []int {
-	// ваш код здесь
+	if size <= 0 {
+		return make([]int, 0)
+	}
+
+	arr := make([]int, size)
+
+	src := rand.NewSource(time.Now().UnixNano())
+	for i := 0; i < size; i++ {
+		elem := int(src.Int63())
+		arr[i] = elem
+	}
+
+	return arr
 }
 
 // maximum returns the maximum number of elements.
 func maximum(data []int) int {
-	// ваш код здесь
+	if len(data) == 0 {
+		return 0
+	}
+
+	if len(data) == 1 {
+		return data[0]
+	}
+
+	maxElem := data[0]
+
+	for i := 1; i < len(data); i++ {
+		if data[i] > maxElem {
+			maxElem = data[i]
+		}
+	}
+
+	return maxElem
 }
 
 // maxChunks returns the maximum number of elements in a chunks.
 func maxChunks(data []int) int {
-	// ваш код здесь
+	if len(data) < 8 {
+		return maximum(data)
+	}
+
+	lenArr := len(data) / 8
+	resultArr := make([]int, 8)
+
+	wg := sync.WaitGroup{}
+	mtx := sync.Mutex{}
+
+	for i := 0; i < 8; i++ {
+
+		startIndex := i * lenArr
+		var lastIndex int
+
+		if i == 7 {
+			lastIndex = len(data)
+		} else {
+			lastIndex = startIndex + lenArr
+		}
+
+		wg.Add(1)
+		go func(mas []int, index int) {
+			defer wg.Done()
+
+			maxElem := mas[0]
+
+			for _, v := range mas[1:] {
+				if v > maxElem {
+					maxElem = v
+				}
+			}
+
+			//По идее каждая горутина пишет в свою ячейку массива (в свой индекс), и mutex не нужен, так как не будет конкурентного доступа
+			//к одним и тем же данным. Флажок "-race" тоже не ругается при такой реализации. Но я все равно не совсем уверен в этом, поэтому
+			//оставлю mutex
+			mtx.Lock()
+			resultArr[index] = maxElem
+			mtx.Unlock()
+
+		}(data[startIndex:lastIndex], i)
+
+	}
+
+	wg.Wait()
+
+	maxElem := resultArr[0]
+
+	for i := 1; i < 8; i++ {
+		if resultArr[i] > maxElem {
+			maxElem = resultArr[i]
+		}
+	}
+
+	return maxElem
+
 }
 
 func main() {
-	fmt.Printf("Генерируем %d целых чисел", SIZE)
-	// ваш код здесь
+	fmt.Printf("Генерируем %d целых чисел ", SIZE)
+	arr := generateRandomElements(SIZE)
 
 	fmt.Println("Ищем максимальное значение в один поток")
-	// ваш код здесь
+
+	initTime := time.Now()
+	max := maximum(arr)
+	elapsed := time.Since(initTime).Microseconds()
 
 	fmt.Printf("Максимальное значение элемента: %d\nВремя поиска: %d ms\n", max, elapsed)
 
-	fmt.Printf("Ищем максимальное значение в %d потоков", CHUNKS)
-	// ваш код здесь
+	fmt.Printf("Ищем максимальное значение в %d потоков ", CHUNKS)
+
+	initTime = time.Now()
+	max = maxChunks(arr)
+	elapsed = time.Since(initTime).Microseconds()
 
 	fmt.Printf("Максимальное значение элемента: %d\nВремя поиска: %d ms\n", max, elapsed)
 }
