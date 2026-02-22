@@ -15,15 +15,15 @@ const (
 // generateRandomElements generates random elements.
 func generateRandomElements(size int) []int {
 	if size <= 0 {
-		return make([]int, 0)
+		return nil
 	}
 
 	arr := make([]int, size)
 
 	src := rand.NewSource(time.Now().UnixNano())
+	rnd := rand.New(src)
 	for i := 0; i < size; i++ {
-		elem := int(src.Int63())
-		arr[i] = elem
+		arr[i] = rnd.Int()
 	}
 
 	return arr
@@ -60,7 +60,6 @@ func maxChunks(data []int) int {
 	resultArr := make([]int, 8)
 
 	wg := sync.WaitGroup{}
-	mtx := sync.Mutex{}
 
 	for i := 0; i < 8; i++ {
 
@@ -85,12 +84,7 @@ func maxChunks(data []int) int {
 				}
 			}
 
-			//По идее каждая горутина пишет в свою ячейку массива (в свой индекс), и mutex не нужен, так как не будет конкурентного доступа
-			//к одним и тем же данным. Флажок "-race" тоже не ругается при такой реализации. Но я все равно не совсем уверен в этом, поэтому
-			//оставлю mutex
-			mtx.Lock()
 			resultArr[index] = maxElem
-			mtx.Unlock()
 
 		}(data[startIndex:lastIndex], i)
 
