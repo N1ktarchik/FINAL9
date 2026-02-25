@@ -2,6 +2,8 @@ package main
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 // Пишите тесты в этом файле
@@ -13,9 +15,8 @@ func TestGenerateRandomElements(t *testing.T) {
 	for i := 0; i < len(length); i++ {
 		mas := generateRandomElements(length[i])
 
-		if len(mas) != expected[i] {
-			t.Errorf("generate random element error. Length: %d , Expected: %d , Result: %d", length[i], expected[i], len(mas))
-		}
+		assert.Equal(t, expected[i], len(mas))
+
 	}
 
 }
@@ -36,9 +37,7 @@ func TestMaximum(t *testing.T) {
 	for i := 0; i < len(expected); i++ {
 		maxElem := maximum(tests[i])
 
-		if maxElem != expected[i] {
-			t.Errorf("func maximum error. Mas: %v , Result: %d , Expected %d", tests[i], maxElem, expected[i])
-		}
+		assert.Equal(t, expected[i], maxElem)
 	}
 
 }
@@ -59,8 +58,6 @@ func TestMaxChunks(t *testing.T) {
 	for i := 0; i < len(expected); i++ {
 		maxElem := maxChunks(tests[i])
 
-		if maxElem != expected[i] {
-			t.Errorf("func maxChunks error. Mas: %v , Result: %d , Expected %d", tests[i], maxElem, expected[i])
-		}
+		assert.Equal(t, expected[i], maxElem)
 	}
 }

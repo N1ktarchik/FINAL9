@@ -22,6 +22,7 @@ func generateRandomElements(size int) []int {
 
 	src := rand.NewSource(time.Now().UnixNano())
 	rnd := rand.New(src)
+
 	for i := 0; i < size; i++ {
 		arr[i] = rnd.Int()
 	}
@@ -52,21 +53,23 @@ func maximum(data []int) int {
 
 // maxChunks returns the maximum number of elements in a chunks.
 func maxChunks(data []int) int {
-	if len(data) < 8 {
+	//В прошлый раз почему-то не запушились изменения в этой функции
+
+	if len(data) < CHUNKS {
 		return maximum(data)
 	}
 
-	lenArr := len(data) / 8
-	resultArr := make([]int, 8)
+	lenArr := len(data) / CHUNKS
+	resultArr := make([]int, CHUNKS)
 
 	wg := sync.WaitGroup{}
 
-	for i := 0; i < 8; i++ {
+	for i := 0; i < CHUNKS; i++ {
 
 		startIndex := i * lenArr
 		var lastIndex int
 
-		if i == 7 {
+		if i == CHUNKS-1 {
 			lastIndex = len(data)
 		} else {
 			lastIndex = startIndex + lenArr
@@ -76,15 +79,7 @@ func maxChunks(data []int) int {
 		go func(mas []int, index int) {
 			defer wg.Done()
 
-			maxElem := mas[0]
-
-			for _, v := range mas[1:] {
-				if v > maxElem {
-					maxElem = v
-				}
-			}
-
-			resultArr[index] = maxElem
+			resultArr[index] = maximum(mas)
 
 		}(data[startIndex:lastIndex], i)
 
@@ -92,15 +87,7 @@ func maxChunks(data []int) int {
 
 	wg.Wait()
 
-	maxElem := resultArr[0]
-
-	for i := 1; i < 8; i++ {
-		if resultArr[i] > maxElem {
-			maxElem = resultArr[i]
-		}
-	}
-
-	return maxElem
+	return maximum(resultArr)
 
 }
 
